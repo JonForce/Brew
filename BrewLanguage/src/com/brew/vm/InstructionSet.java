@@ -30,4 +30,21 @@ public class InstructionSet {
 	public static boolean isComparisonOperator(short inst) {
 		return inst >= GREATER_THAN && inst <= EQUAL_TO;
 	}
+	
+	/** @return the bytecode instruction for the conditional operator given by name.
+	 * @param name This is the name of the conditional operator. Valid inputs include >, <, >=, <=
+	 */
+	public static short getConditionalByName(String name) {
+		if (name.equals(">"))
+			return GREATER_THAN;
+		else if (name.equals(">="))
+			return GREATER_THAN_EQUAL;
+		else if (name.equals("<"))
+			return LESS_THAN;
+		else if (name.equals("<="))
+			return LESS_THAN_EQUAL;
+		else if (name.equals("=="))
+			return EQUAL_TO;
+		else throw new RuntimeException("No such conditional operator : " + name);
+	}
 }
