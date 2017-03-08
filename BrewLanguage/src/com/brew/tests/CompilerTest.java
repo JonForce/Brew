@@ -46,6 +46,23 @@ public class CompilerTest {
 		assertTrue(
 				"Failed to split a conditional expression into 3 parts correctly.",
 				array[0].equals("7*3+5/6") && array[1].equals("<=") && array[2].equals("51*B-F"));
+		
+		
+		// ~~~~~~~~~~~~
+		
+		// Test the ability of the compiler to tokenize an expression.
+		String[] out = new Utilities().tokenize("1 - -87 * (-5 + 1)");
+		assertTrue(
+				"Failed to tokenize advanced string.",
+				out[0].equals("1") &&
+				out[1].equals("-") &&
+				out[2].equals("-87") &&
+				out[3].equals("*") &&
+				out[4].equals("(") &&
+				out[5].equals("-5") &&
+				out[6].equals("+") &&
+				out[7].equals("1") &&
+				out[8].equals(")"));
 	}
 	
 }

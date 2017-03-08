@@ -47,4 +47,21 @@ public class InstructionSet {
 			return EQUAL_TO;
 		else throw new RuntimeException("No such conditional operator : " + name);
 	}
+	
+	/** @return the bytecode instruction for the operator given by the name.
+	 * The world will end if you give this method operators with whitespace.
+	 * @param name the name of the operator. Ex : +, -, *
+	 */
+	public static short getOperatorByName(String name) {
+		if (name.equals("+"))
+			return ADD;
+		else if (name.equals("-"))
+			return SUBTRACT;
+		else if (name.equals("*"))
+			return MULTIPLY;
+		else if (name.equals("/"))
+			return DIVIDE;
+		else
+			throw new RuntimeException("No such arithmetic operator : " + name);
+	}
 }

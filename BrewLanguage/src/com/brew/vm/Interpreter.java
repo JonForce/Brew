@@ -120,14 +120,19 @@ public class Interpreter {
 			System.out.println("Doing simple arithmetic operation");
 		
 		testForUnderflow(2);
+		
+		short
+			b = stack.pop(),
+			a = stack.pop();
+		
 		if (instruction == InstructionSet.ADD)
-			stack.push((short) (stack.pop() + stack.pop()));
+			stack.push((short) (a + b));
 		else if (instruction == InstructionSet.SUBTRACT)
-			stack.push((short) (stack.pop() - stack.pop()));
+			stack.push((short) (a - b));
 		else if (instruction == InstructionSet.DIVIDE)
-			stack.push((short) (stack.pop() / stack.pop()));
+			stack.push((short) (a / b));
 		else if (instruction == InstructionSet.MULTIPLY)
-			stack.push((short) (stack.pop() * stack.pop()));
+			stack.push((short) (a * b));
 		else
 			throw new RuntimeException("Not arithmetic operator.");
 	}

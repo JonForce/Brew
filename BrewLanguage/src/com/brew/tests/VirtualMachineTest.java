@@ -13,9 +13,10 @@ public class VirtualMachineTest {
 	public void test() {
 		VirtualMachine vm = new VirtualMachine();
 		
+		// This is the basic subtraction test.
 		vm.interpreter().interpret(new short[] {
-				InstructionSet.PUSH, 2,
 				InstructionSet.PUSH, -10,
+				InstructionSet.PUSH, 2,
 				InstructionSet.SUBTRACT
 		});
 		assertTrue("Failed basic subtraction test.", vm.stack().pop() == -12);

@@ -8,12 +8,23 @@ public class Test {
 	public static void main(String[] args) {
 		
 		VirtualMachine vm = new VirtualMachine();
-		vm.interpreter().enableDebugMessages();
+		//vm.interpreter().enableDebugMessages();
 		Utilities util = new Utilities();
 		
-//		String[] array = util.splitConditionalExpression("7*3 + 5/ 6 <= 51 * B - F");
-//		for (String s : array)
-//			System.out.println(s);
+		String source = "99 *2 * (3 - -9) + 7 - 5 * 7";
+		
+		System.out.println("Source : " + source);
+		
+		System.out.println("\nTokenizing source : ");
+		for (String s : util.tokenize(source))
+			System.out.println(s);
+		
+		System.out.println("\nConverting to RPN : ");
+		for (String s : util.toPostfix(util.tokenize(source)))
+			System.out.println(s);
+		
+		System.out.println("\nPutting into virtual machine : ");
+		vm.interpreter().interpret(util.expressionToInstructions(util.toPostfix(util.tokenize(source))));
+		vm.interpreter().printStack();
 	}
-	
 }
