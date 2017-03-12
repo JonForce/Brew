@@ -10,11 +10,11 @@ import com.brew.vm.exceptions.StackUnderflowException;
  */
 public class Interpreter {
 	
-	private final Stack<Short> stack;
+	private final Stack<Byte> stack;
 	private boolean loud = false;
 	private Runtime runtime = null;
 	
-	public Interpreter(Stack<Short> stack) {
+	public Interpreter(Stack<Byte> stack) {
 		this.stack = stack;
 	}
 	
@@ -22,11 +22,11 @@ public class Interpreter {
 	 * will be executed in order starting from instructions[0].
 	 * @param instructions The instruction array to process.
 	 */
-	public void interpret(short[] instructions) {
+	public void interpret(byte[] instructions) {
 		runtime = new Runtime(instructions);
 		
 		while (runtime.notFinished()) {
-			short instruction = runtime.currentInstruction();
+			byte instruction = runtime.currentInstruction();
 			//if (loud)
 			//	System.out.println("Executing instruction " + instruction);
 			
@@ -49,6 +49,14 @@ public class Interpreter {
 					doIf();
 				else if (InstructionSet.isComparisonOperator(instruction))
 					doComparison(instruction);
+				else if (instruction == InstructionSet.POP_FRAME)
+					doPopFrame();
+				else if (instruction == InstructionSet.PUSH_FRAME)
+					doPushFrame(runtime.popParameter());
+				else if (instruction == InstructionSet.PULL_VAR)
+					doPullVar(runtime.popParameter(), runtime.popParameter());
+				else if (instruction == InstructionSet.PUSH_VAR)
+					doPushVar(runtime.popParameter(), runtime.popParameter());
 				else
 					throw new RuntimeException("No such instruction : " + instruction);
 				
@@ -93,10 +101,10 @@ public class Interpreter {
 			System.out.println("If " + condition);
 		if (condition == 0) {
 			// Condition is false.
-			runtime.popParameter();
+			doGoto(runtime.i + 2 + runtime.popParameter());
 		} else if (condition == 1) {
 			// Condition is true.
-			doGoto(runtime.popParameter());
+			doGoto(runtime.i + 2);
 		} else {
 			// This isn't C++, non 1 or 0 values are illegal.
 			throw new RuntimeException("Invalid truth value : " + condition);
@@ -109,30 +117,30 @@ public class Interpreter {
 		runtime.i = location - 1;
 	}
 	
-	private void doPush(short value) {
+	private void doPush(byte value) {
 		if (loud)
 			System.out.println("Pushing " + value);
 		stack.push(value);
 	}
 	
-	private void doArithmeticOperator(short instruction) {
+	private void doArithmeticOperator(byte instruction) {
 		if (loud)
 			System.out.println("Doing simple arithmetic operation");
 		
 		testForUnderflow(2);
 		
-		short
+		byte
 			b = stack.pop(),
 			a = stack.pop();
 		
 		if (instruction == InstructionSet.ADD)
-			stack.push((short) (a + b));
+			stack.push((byte) (a + b));
 		else if (instruction == InstructionSet.SUBTRACT)
-			stack.push((short) (a - b));
+			stack.push((byte) (a - b));
 		else if (instruction == InstructionSet.DIVIDE)
-			stack.push((short) (a / b));
+			stack.push((byte) (a / b));
 		else if (instruction == InstructionSet.MULTIPLY)
-			stack.push((short) (a * b));
+			stack.push((byte) (a * b));
 		else
 			throw new RuntimeException("Not arithmetic operator.");
 	}
@@ -142,20 +150,47 @@ public class Interpreter {
 			System.out.println("Duplicating");
 		
 		testForUnderflow(1);
-		short item = stack.peek();
+		byte item = stack.peek();
 		stack.push(item);
 	}
 	
-	private void doComparison(short comparison) {
+	private void doPopFrame() {
 		if (loud)
-			System.out.println("Doing comparison");
-		
+			System.out.println("Popping frame.");
+		runtime.popFrame();
+	}
+	
+	private void doPushFrame(byte size) {
+		if (loud)
+			System.out.println("Pushing frame of size : " + size);
+		runtime.pushFrame(size);
+	}
+	
+	private void doPushVar(byte frameID, byte varID) {
+		if (loud)
+			System.out.println("Pushing variable in frame " + frameID + " at var " + varID);
+		this.testForUnderflow(1);
+		byte value = stack.pop();
+		runtime.pushVar(frameID, varID, value);
+	}
+	
+	private void doPullVar(byte frameID, byte varID) {
+		if (loud)
+			System.out.println("Pulling var " + frameID + " at var " + varID);
+		byte value = runtime.pullVar(frameID, varID);
+		stack.push(value);
+	}
+	
+	private void doComparison(byte comparison) {
 		testForUnderflow(2);
 		
-		short
+		byte
 			a = stack.pop(),
 			b = stack.pop();
 		boolean result;
+		
+		if (loud)
+			System.out.println("Doing comparison " + a + " " + b);
 		
 		// Map the comparison operator.
 		if (comparison == InstructionSet.GREATER_THAN)
@@ -172,9 +207,9 @@ public class Interpreter {
 			throw new RuntimeException("Unkown comparison operator.");
 		
 		if (result)
-			stack.push((short) 1);
+			stack.push((byte) 1);
 		else
-			stack.push((short) 0);
+			stack.push((byte) 0);
 	}
 	
 	private void testForUnderflow(int guarenteeSpace) {

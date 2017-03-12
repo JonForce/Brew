@@ -11,20 +11,22 @@ public class Test {
 		//vm.interpreter().enableDebugMessages();
 		Utilities util = new Utilities();
 		
-		String source = "99 *2 * (3 - -9) + 7 - 5 * 7";
+		String source = "99 *poop * (3 - -9) + 7 - 5 * 7";
 		
 		System.out.println("Source : " + source);
 		
 		System.out.println("\nTokenizing source : ");
-		for (String s : util.tokenize(source))
+		String[] tokens = util.tokenize(source);
+		for (String s : tokens)
 			System.out.println(s);
 		
 		System.out.println("\nConverting to RPN : ");
-		for (String s : util.toPostfix(util.tokenize(source)))
+		String[] rpn = util.toPostfix(tokens);
+		for (String s : rpn)
 			System.out.println(s);
 		
 		System.out.println("\nPutting into virtual machine : ");
-		vm.interpreter().interpret(util.expressionToInstructions(util.toPostfix(util.tokenize(source))));
+		vm.interpreter().interpret(util.expressionToInstructions(rpn));
 		vm.interpreter().printStack();
 	}
 }

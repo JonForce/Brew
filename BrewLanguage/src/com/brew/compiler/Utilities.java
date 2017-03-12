@@ -2,6 +2,7 @@ package com.brew.compiler;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -9,21 +10,28 @@ import com.brew.vm.InstructionSet;
 
 public class Utilities {
 	
-	public short[] expressionToInstructions(String[] postfix) {
-		ArrayList<Short> list = new ArrayList<Short>();
+	/** Translate an expression tokenized and given in postfix notation to machine instructions. */
+	public byte[] expressionToInstructions(String[] postfix, HashMap<String, StackPointer> variableNameToPointerMap) {
+		ArrayList<Byte> list = new ArrayList<Byte>();
 		
 		for (String token : postfix) {
 			if (isNumber(token)) {
 				list.add(InstructionSet.PUSH);
-				list.add(Short.parseShort(token));
+				list.add(Byte.parseByte(token));
 			} else if (token.length() == 1 && isSimpleOperator(token.charAt(0))) {
 				list.add(InstructionSet.getOperatorByName(token));
+			} else {
+				StackPointer pointer = variableNameToPointerMap.get(token);
+				list.add(InstructionSet.PULL_VAR);
+				list.add(pointer.frame());
+				list.add(pointer.variableID());
 			}
 		}
 		
-		short[] out = new short[list.size()];
+		byte[] out = new byte[list.size()];
 		for (int i = 0; i < list.size(); i ++)
 			out[i] = list.get(i);
+		
 		return out;
 	}
 	
@@ -38,7 +46,7 @@ public class Utilities {
 		
 		for (String token : infix) {
 			
-			if (isNumber(token))
+			if (isNumber(token) || Character.isLetter(token.charAt(0)))
 				queue.add(token);
 			else if (token.length() == 1 && token.charAt(0) == '(')
 				operatorStack.push('(');
@@ -117,9 +125,9 @@ public class Utilities {
 	 * @param conditional The conditional by name. Should look something like this : >, <, >=, <=, ==
 	 * @param right The instructions required to push the right hand operator to the stack.
 	 */
-	public short[] generateConditionalBytecode(short[] left, String conditional, short[] right) {
+	public byte[] composeConditional(byte[] left, String conditional, byte[] right) {
 		// The + 1 accounts for the single conditional operator that must be appended.
-		short[] returnValue = new short[left.length + right.length + 1];
+		byte[] returnValue = new byte[left.length + right.length + 1];
 		
 		// Copy over the right hand instructions.
 		copyInto(right, returnValue, 0);
@@ -152,7 +160,7 @@ public class Utilities {
 		while (i < source.length()) {
 			// This line determines whether or not the next token is potentially a negative sign.
 			// A - could actually be a negative sign if it's the first thing in the expression OR the previous token is not a number.
-			boolean isPossiblyANegativeSign = i == 0 || (!isNumber(list.get(numberOfTokens - 1)) && list.get(numberOfTokens-1).charAt(0) != ')');
+			boolean isPossiblyANegativeSign = i == 0 || (!isNumber(list.get(numberOfTokens - 1)) && list.get(numberOfTokens-1).charAt(0) != ')' && !Character.isLetter(list.get(numberOfTokens-1).charAt(0)));
 			
 			String token = parseFirstTokenIn(source.substring(i), isPossiblyANegativeSign);
 			list.add(token);
@@ -163,10 +171,25 @@ public class Utilities {
 		return list.toArray(new String[0]);
 	}
 	
+	/** This is a utility method that copies the source array into the destination array
+	 * starting at the specified location. */
+	public void copyInto(byte[] source, byte[] destination, int location) {
+		if (location + source.length >= destination.length)
+			throw new RuntimeException("Not enough room to copy array.");
+		
+		for (int i = 0; i < source.length; i ++)
+			if (destination[i + location] != 0)
+				throw new RuntimeException("Problem copying array, it would override destination at index : " + i);
+			else
+				destination[i + location] = source[i];
+	}
+	
 	/** @return the first token in the source. A token is either a operand or an operator. */
 	private String parseFirstTokenIn(String source, boolean isPotentialNegativeSign) {
+		if (Character.isLetter(source.charAt(0)))
+			return parseFirstVariableIn(source);
 		// If the first character in the source is parenthesis OR it's an operator and not a potential negative sign,
-		if (isParenthesis(source.charAt(0)) || (isSimpleOperator(source.charAt(0)) && !isPotentialNegativeSign))
+		else if (isParenthesis(source.charAt(0)) || (isSimpleOperator(source.charAt(0)) && !isPotentialNegativeSign))
 			// Return the first character because it must be an operator.
 			return source.substring(0, 1);
 		// Else we have a number. But we need to find the length of the number so we can parse it out of the source.
@@ -183,17 +206,16 @@ public class Utilities {
 		}
 	}
 	
-	/** This is a utility method that copies the source array into the destination array
-	 * starting at the specified location. */
-	private void copyInto(short[] source, short[] destination, int location) {
-		if (location + source.length >= destination.length)
-			throw new RuntimeException("Not enough room to copy array.");
-		
-		for (int i = 0; i < source.length; i ++)
-			if (destination[i + location] != 0)
-				throw new RuntimeException("Problem copying array, it would override destination at index : " + i);
-			else
-				destination[i + location] = source[i];
+	/** @return the first alphabetic variable token in the specified source string. The
+	 * token must start at the beginning of the string. */
+	private String parseFirstVariableIn(String source) {
+		String total = "";
+		int i = 0;
+		while (Character.isLetter(source.charAt(i))) {
+			total += source.substring(i, i + 1);
+			i ++;
+		}
+		return total;
 	}
 	
 	/** @return true if the thing is a simple operator. */
@@ -219,7 +241,7 @@ public class Utilities {
 		return token.matches("-?\\d+(\\.\\d+)?");
 	}
 	
-	/** @return the numerical precidence of the operator. */
+	/** @return the numerical precedence of the operator. */
 	private int precidenceOf(char op) {
 		return
 				(op == '+' || op == '-')? 2 :

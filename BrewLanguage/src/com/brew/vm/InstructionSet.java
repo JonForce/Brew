@@ -2,7 +2,7 @@ package com.brew.vm;
 
 public class InstructionSet {
 	
-	public static final short
+	public static final byte
 		DUPLICATE = 0x00,
 		PUSH = 0x01,
 		ADD = 0x02,
@@ -19,22 +19,27 @@ public class InstructionSet {
 		GREATER_THAN_EQUAL = 0x0B,
 		LESS_THAN = 0x0C,
 		LESS_THAN_EQUAL = 0x0D,
-		EQUAL_TO = 0x0E;
+		EQUAL_TO = 0x0E,
+		
+		PUSH_VAR = 0x0F,
+		PULL_VAR = 0x10,
+		PUSH_FRAME = 0x11,
+		POP_FRAME = 0x12;
 	
 	/** @return false if the instruction is a arithmetic operator. */
-	public static boolean isArithmeticOperator(short inst) {
+	public static boolean isArithmeticOperator(byte inst) {
 		return inst >= ADD && inst <= MULTIPLY;
 	}
 	
 	/** @return true if the instruction is a comparison operator. */
-	public static boolean isComparisonOperator(short inst) {
+	public static boolean isComparisonOperator(byte inst) {
 		return inst >= GREATER_THAN && inst <= EQUAL_TO;
 	}
 	
 	/** @return the bytecode instruction for the conditional operator given by name.
 	 * @param name This is the name of the conditional operator. Valid inputs include >, <, >=, <=
 	 */
-	public static short getConditionalByName(String name) {
+	public static byte getConditionalByName(String name) {
 		if (name.equals(">"))
 			return GREATER_THAN;
 		else if (name.equals(">="))
@@ -52,7 +57,7 @@ public class InstructionSet {
 	 * The world will end if you give this method operators with whitespace.
 	 * @param name the name of the operator. Ex : +, -, *
 	 */
-	public static short getOperatorByName(String name) {
+	public static byte getOperatorByName(String name) {
 		if (name.equals("+"))
 			return ADD;
 		else if (name.equals("-"))

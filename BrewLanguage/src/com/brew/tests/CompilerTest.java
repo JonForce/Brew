@@ -12,19 +12,19 @@ public class CompilerTest {
 	@Test
 	public void testCompiler() {
 		// Test the ability of the compiler to translate a conditional correctly.
-		short[] output = new Utilities().generateConditionalBytecode(
-				new short[] {
+		byte[] output = new Utilities().composeConditional(
+				new byte[] {
 						InstructionSet.PUSH, 5,
 						InstructionSet.PUSH, 10,
 						InstructionSet.ADD,
 				},
 				">",
-				new short[] {
+				new byte[] {
 						InstructionSet.PUSH, 5,
 						InstructionSet.PUSH, 7,
 						InstructionSet.SUBTRACT,
 				});
-		short[] correctOutput = new short[] {
+		byte[] correctOutput = new byte[] {
 				InstructionSet.PUSH, 5,
 				InstructionSet.PUSH, 7,
 				InstructionSet.SUBTRACT,
@@ -63,6 +63,17 @@ public class CompilerTest {
 				out[6].equals("+") &&
 				out[7].equals("1") &&
 				out[8].equals(")"));
+		
+		// Test the ability of the compiler to translate tokenized infix to postfix notation.
+		String[] postfix = new Utilities().toPostfix(new String[] {"8","+","6","/","3"});
+		assertTrue(
+				"Failed to translate tokenized infix to postfix.",
+				postfix[0].equals("8") &&
+				postfix[1].equals("6") &&
+				postfix[2].equals("3") &&
+				postfix[3].equals("/") &&
+				postfix[4].equals("+"));
+		
 	}
 	
 }

@@ -10,11 +10,11 @@ import com.brew.vm.exceptions.StackUnderflowException;
  */
 public class VirtualMachine {
 	
-	private Stack<Short> stack;
+	private Stack<Byte> stack;
 	private Interpreter interpreter;
 	
 	public VirtualMachine() {
-		stack = new Stack<Short>();
+		stack = new Stack<Byte>();
 		interpreter = new Interpreter(stack);
 	}
 	
@@ -31,7 +31,7 @@ public class VirtualMachine {
 	
 	/** @return the Virtual Machine's Stack. This is where the machine
 	 * performs it's operations. */
-	public Stack<Short> stack() {
+	public Stack<Byte> stack() {
 		return stack;
 	}
 }
