@@ -88,5 +88,4 @@ public class CompilerTest {
 		// Test that this will not compile.
 		new Compiler().compileAssignmentStatement("byte x = x");
 	}
-	
 }

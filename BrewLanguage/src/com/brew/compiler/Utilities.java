@@ -3,7 +3,6 @@ package com.brew.compiler;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Queue;
 import java.util.Stack;
 
 import com.brew.compiler.exceptions.CompilationException;
@@ -11,8 +10,30 @@ import com.brew.vm.InstructionSet;
 
 public class Utilities {
 	
-	/** Translate an expression tokenized and given in postfix notation to machine instructions. */
-	public byte[] expressionToInstructions(String[] postfix, HashMap<String, StackPointer> variableNameToPointerMap) {
+	/** This method compiles a given conditional expression.
+	 * A conditional expression is given by :
+	 * L OP R
+	 * Where :
+	 * L is a simple arithmetic expression.
+	 * OP is a valid boolean operator.
+	 * R is a simple arithmetic expression.
+	 * @param source The source expression to compile.
+	 * @param variableMap The map of variables to their pointer values.
+	 * @return the compiled and composed bytecode for the expression.
+	 */
+	public byte[] compileConditional(String source, HashMap<String, StackPointer> variableMap) {
+		String[] split = this.splitConditionalExpression(source);
+		byte[] leftCompiled = compileExpression(toPostfix(tokenize(split[0], true)), variableMap);
+		byte[] rightCompiled = compileExpression(toPostfix(tokenize(split[2], true)), variableMap);
+		return composeConditional(leftCompiled, split[1], rightCompiled);
+	}
+	
+	/** Translate an expression tokenized and given in postfix notation to machine instructions.
+	 * Valid expressions include only numbers (positive or negative), simple operators (* - + ),
+	 * and variables that are included in the variable map.
+	 * @return the compiled bytecode.
+	 */
+	public byte[] compileExpression(String[] postfix, HashMap<String, StackPointer> variableNameToPointerMap) {
 		ArrayList<Byte> list = new ArrayList<Byte>();
 		
 		for (String token : postfix) {
@@ -188,6 +209,14 @@ public class Utilities {
 				throw new RuntimeException("Problem copying array, it would override destination at index : " + i);
 			else
 				destination[i + location] = source[i];
+	}
+	
+	/** @return a new String that is the same as the source but without any leading whitespace. */
+	public String removeLeadingWhitespace(String source) {
+		int i = 0;
+		while (Character.isWhitespace(source.charAt(i)))
+			i ++;
+		return source.substring(i);
 	}
 	
 	/** @return the first token in the source. A token is either a operand or an operator. */

@@ -5,6 +5,11 @@ import java.util.HashMap;
 import com.brew.compiler.exceptions.CompilationException;
 import com.brew.vm.InstructionSet;
 
+/**
+ * This class is the highest level of interface for compiling Brew source code to
+ * bytecode.
+ * @author Jonathan Force
+ */
 public class Compiler {
 	
 	private final HashMap<String, StackPointer> variableToPointerMap;
@@ -17,7 +22,43 @@ public class Compiler {
 		pointerID = frameID = 0;
 	}
 	
-	/** This command will compile and compose a simple assignment statement into its bytecode form.
+	/** Compile an if-statement into bytecode from its Brew source code.
+	 * if statements take the form :
+	 * if (condition)
+	 * @param source The source code to compile.
+	 * @param bodyInstructionsLength The number of byte code instructions in the if statement's body.
+	 * @return The compiled byte code.
+	 */
+	public byte[] compileIfStatement(String source, int bodyInstructionsLength) {
+		source = util.removeLeadingWhitespace(source);
+		
+		// Make sure it's an if statement at the very least.
+		if (!source.startsWith("if"))
+			throw new CompilationException("Can't compile this. It's not an if statement.");
+		
+		// Remove the head of the if statement. We don't need it any more.
+		source = source.substring(2);
+		source = util.removeLeadingWhitespace(source);
+		System.out.println(source);
+		
+		// Define the end index of to be the first time we see a close-parenthesis.
+		int endIndex = 0;
+		while (source.charAt(endIndex++) != ')');
+		
+		// Get the crud from inside the if statement's parenthesis.
+		String insideTheParenthesis = source.substring(1, endIndex-1);
+		
+		byte[] compiledCondition = util.compileConditional(insideTheParenthesis, variableToPointerMap);
+		
+		if (bodyInstructionsLength >= Byte.MAX_VALUE)
+			throw new CompilationException("Unfortunately, at this time Brew supports a maximum of " + Byte.MAX_VALUE + " instructions inside a conditional block.");
+		
+		return compose(
+				compiledCondition,
+				new byte[] { InstructionSet.IF, (byte) bodyInstructionsLength });
+	}
+	
+	/** This method will compile and compose a simple assignment statement into its bytecode form.
 	 * A valid assignment statement is of the following form :
 	 * <b>T name = ex</b>
 	 * Where :
@@ -101,7 +142,7 @@ public class Compiler {
 	public byte[] compileExpression(String source) {
 		String[] tokens = util.tokenize(source, true);
 		String[] postfix = util.toPostfix(tokens);
-		byte[] compiledCode = util.expressionToInstructions(postfix, variableToPointerMap);
+		byte[] compiledCode = util.compileExpression(postfix, variableToPointerMap);
 		return compiledCode;
 	}
 	
