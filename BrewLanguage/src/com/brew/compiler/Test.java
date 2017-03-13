@@ -9,24 +9,43 @@ public class Test {
 		
 		VirtualMachine vm = new VirtualMachine();
 		//vm.interpreter().enableDebugMessages();
-		Utilities util = new Utilities();
+		Compiler compiler = new Compiler();
 		
-		String source = "99 *poop * (3 - -9) + 7 - 5 * 7";
 		
-		System.out.println("Source : " + source);
+		// TODO : This compiles? "byte x ="
 		
-		System.out.println("\nTokenizing source : ");
-		String[] tokens = util.tokenize(source);
-		for (String s : tokens)
-			System.out.println(s);
+		vm.interpreter().interpret(
+				compiler.compose(
+						new byte[] { InstructionSet.PUSH_FRAME, 2, },
+						compiler.compileAssignmentStatement("byte x = 2"),
+						compiler.compileAssignmentStatement("byte x = 2"),
+						compiler.compileAssignmentStatement("byte poop = 1"),
+						compiler.compileAssignmentStatement("poop = x*x"),
+						new byte[] { InstructionSet.DEBUG_STACK }));
 		
-		System.out.println("\nConverting to RPN : ");
-		String[] rpn = util.toPostfix(tokens);
-		for (String s : rpn)
-			System.out.println(s);
 		
-		System.out.println("\nPutting into virtual machine : ");
-		vm.interpreter().interpret(util.expressionToInstructions(rpn));
-		vm.interpreter().printStack();
+		
+		
+		
+		//vm.interpreter().enableDebugMessages();
+//		Utilities util = new Utilities();
+//		
+//		String source = "99 *poop * (3 - -9) + 7 - 5 * 7";
+//		
+//		System.out.println("Source : " + source);
+//		
+//		System.out.println("\nTokenizing source : ");
+//		String[] tokens = util.tokenize(source);
+//		for (String s : tokens)
+//			System.out.println(s);
+//		
+//		System.out.println("\nConverting to RPN : ");
+//		String[] rpn = util.toPostfix(tokens);
+//		for (String s : rpn)
+//			System.out.println(s);
+//		
+//		System.out.println("\nPutting into virtual machine : ");
+//		vm.interpreter().interpret(util.expressionToInstructions(rpn));
+//		vm.interpreter().printStack();
 	}
 }

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Queue;
 import java.util.Stack;
 
+import com.brew.compiler.exceptions.CompilationException;
 import com.brew.vm.InstructionSet;
 
 public class Utilities {
@@ -22,6 +23,10 @@ public class Utilities {
 				list.add(InstructionSet.getOperatorByName(token));
 			} else {
 				StackPointer pointer = variableNameToPointerMap.get(token);
+				// Ensure that our variable actually exists.
+				if (pointer == null)
+					throw new CompilationException("The variable, \"" + token + "\" does not exist.");
+				
 				list.add(InstructionSet.PULL_VAR);
 				list.add(pointer.frame());
 				list.add(pointer.variableID());
@@ -149,11 +154,12 @@ public class Utilities {
 	 * @param source The input infix expression.
 	 * @return The infix expression broken up into its tokens.
 	 */
-	public String[] tokenize(String source) {
+	public String[] tokenize(String source, boolean removeSpaces) {
 		ArrayList<String> list = new ArrayList<String>();
 		
 		// Remove all whitespace.
-		source = source.replaceAll("\\s+","");
+		if (removeSpaces)
+			source = source.replaceAll("\\s+","");
 		
 		int i = 0;
 		int numberOfTokens = 0;
@@ -174,7 +180,7 @@ public class Utilities {
 	/** This is a utility method that copies the source array into the destination array
 	 * starting at the specified location. */
 	public void copyInto(byte[] source, byte[] destination, int location) {
-		if (location + source.length >= destination.length)
+		if (location + source.length > destination.length)
 			throw new RuntimeException("Not enough room to copy array.");
 		
 		for (int i = 0; i < source.length; i ++)
@@ -211,7 +217,7 @@ public class Utilities {
 	private String parseFirstVariableIn(String source) {
 		String total = "";
 		int i = 0;
-		while (Character.isLetter(source.charAt(i))) {
+		while (i < source.length() && Character.isLetter(source.charAt(i))) {
 			total += source.substring(i, i + 1);
 			i ++;
 		}

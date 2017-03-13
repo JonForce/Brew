@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import com.brew.compiler.Utilities;
+import com.brew.compiler.exceptions.CompilationException;
+import com.brew.compiler.Compiler;
 import com.brew.vm.InstructionSet;
 
 public class CompilerTest {
@@ -51,7 +53,7 @@ public class CompilerTest {
 		// ~~~~~~~~~~~~
 		
 		// Test the ability of the compiler to tokenize an expression.
-		String[] out = new Utilities().tokenize("1 - -87 * (-5 + 1)");
+		String[] out = new Utilities().tokenize("1 - -87 * (-5 + 1)", true);
 		assertTrue(
 				"Failed to tokenize advanced string.",
 				out[0].equals("1") &&
@@ -73,7 +75,18 @@ public class CompilerTest {
 				postfix[2].equals("3") &&
 				postfix[3].equals("/") &&
 				postfix[4].equals("+"));
-		
+	}
+	
+	@Test(expected = CompilationException.class)
+	public void errorTestA() {
+		// Test that this will not compile.
+		new Compiler().compileAssignmentStatement("byte x = y");
+	}
+	
+	@Test(expected = CompilationException.class)
+	public void errorTestB() {
+		// Test that this will not compile.
+		new Compiler().compileAssignmentStatement("byte x = x");
 	}
 	
 }

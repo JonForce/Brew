@@ -24,7 +24,6 @@ public class Runtime {
 	
 	/** Push a stack frame of a specified size. Frames are used to store variables. */
 	public void pushFrame(byte size) {
-		System.out.println("Pushed frame");
 		Byte[] frame = new Byte[size];
 		frames.add(frame);
 	}
@@ -40,14 +39,23 @@ public class Runtime {
 		return frames.get(frameID)[id];
 	}
 	
+	/** This method pushes a variable onto the stack. It will override the value
+	 * of the variable if the variable doesn't exist. */
 	public void pushVar(byte frameID, byte id, byte value) {
 		// Beware bad input.
 		if (frameID >= frames.size() || frameID < 0)
-			throw new RuntimeException("FrameID " + frameID + " is not valid.");
+			throw new RuntimeException("FrameID " + frameID + " is not valid. There are currently " + frames.size() + " frames.");
 		else if (id >= frames.get(frameID).length || id < 0)
 			throw new RuntimeException("Variable id " + id + " is not valid in frame " + frameID);
 		
 		frames.get(frameID)[id] = value;
+	}
+	
+	/** Print all the variables in the stack. */
+	public void printVariables() {
+		for (int a = 0; a < frames.size(); a ++)
+			for (int b = 0; b < frames.get(a).length; b ++)
+				System.out.println("Variable " + b + " in frame " + a + ". Value : " + frames.get(a)[b]);
 	}
 	
 	/** @return true while there are still more instructions to execute. */

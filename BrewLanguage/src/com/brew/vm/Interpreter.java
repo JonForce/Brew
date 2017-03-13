@@ -72,11 +72,20 @@ public class Interpreter {
 		}
 	}
 	
+	/** @return the current runtime of the interpreter. Beware : may be null. */
+	public Runtime getRuntime() {
+		return runtime;
+	}
+	
 	/** Print every element on the Stack. */
 	public void printStack() {
 		System.out.println("[DEBUG STACK]");
 		for (int i = 0; i < stack.size(); i ++)
 			System.out.println(i+": " + stack.get(i));
+		if (runtime != null) {
+			System.out.println("[STACK VARIABLES]");
+			runtime.printVariables();
+		}
 	}
 	
 	/** Enabling debug messages will make the Virtual Machine print out a message every time
@@ -124,25 +133,30 @@ public class Interpreter {
 	}
 	
 	private void doArithmeticOperator(byte instruction) {
-		if (loud)
-			System.out.println("Doing simple arithmetic operation");
-		
 		testForUnderflow(2);
 		
 		byte
 			b = stack.pop(),
 			a = stack.pop();
+		String name = "";
 		
-		if (instruction == InstructionSet.ADD)
+		if (instruction == InstructionSet.ADD) {
 			stack.push((byte) (a + b));
-		else if (instruction == InstructionSet.SUBTRACT)
+			name = "+";
+		} else if (instruction == InstructionSet.SUBTRACT) {
 			stack.push((byte) (a - b));
-		else if (instruction == InstructionSet.DIVIDE)
+			name = "-";
+		} else if (instruction == InstructionSet.DIVIDE) {
 			stack.push((byte) (a / b));
-		else if (instruction == InstructionSet.MULTIPLY)
+			name = "/";
+		} else if (instruction == InstructionSet.MULTIPLY) {
 			stack.push((byte) (a * b));
-		else
+			name = "*";
+		} else
 			throw new RuntimeException("Not arithmetic operator.");
+		
+		if (loud)
+			System.out.println("Doing simple arithmetic operation : " + a + " " + name + " " + b);
 	}
 	
 	private void doDuplicate() {
