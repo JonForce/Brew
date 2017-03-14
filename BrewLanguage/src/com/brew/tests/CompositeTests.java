@@ -47,6 +47,26 @@ public class CompositeTests {
 				"Failed a variable test.",
 				vm.interpreter().getRuntime().pullVar((byte)0, (byte)0) == (byte) 1);
 		
+		
+		
+		// ~~~~~~~~~~~~
+		compiler.reset();
+		vm.stack().clear();
+		
+		// Do an if statement test
+		vm.interpreter().interpret(
+				compiler.compose(
+						new byte[] { InstructionSet.PUSH_FRAME, 1, },
+						compiler.compileAssignmentStatement("byte x = 5"),
+						compiler.compileIfStatement("if (x > 3)", 2),
+						new byte[] { InstructionSet.PUSH, (byte)66 }));
+		
+		assertTrue(
+				"Failed an if statement composite test.",
+				vm.stack().pop() == (byte)66);
+		
+		
+		
 	}
 
 }

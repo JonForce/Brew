@@ -1,5 +1,6 @@
 package com.brew.compiler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.brew.compiler.exceptions.CompilationException;
@@ -22,6 +23,49 @@ public class Compiler {
 		pointerID = frameID = 0;
 	}
 	
+	
+	public byte[] compile(String ... sourceLines) {
+		byte[] total = new byte[0];
+		byte neededFrameSize = 0;
+		
+		for (int line = 0; line < sourceLines.length; line ++) {
+			String source = sourceLines[line];
+			
+			source = util.removeLeadingWhitespace(source);
+			
+			if (source.startsWith("DEBUG")) {
+				total = compose(total, new byte[] { InstructionSet.DEBUG_STACK });
+			} else if (source.startsWith("if")) {
+				ArrayList<String> block = new ArrayList<String>();
+				line ++;
+				while (!util.removeLeadingWhitespace(sourceLines[line]).startsWith("}")) {
+					block.add(sourceLines[line]);
+					line ++;
+				}
+				
+				int old = pointerID;
+				pointerID = 0;
+				frameID ++;
+				byte[] blockCompiled = compile(block.toArray(new String[0]));
+				frameID --;
+				pointerID = old;
+				
+				total = compose(total, compileIfStatement(source, blockCompiled.length), blockCompiled);
+			} else {
+				int oldNumberOfVariables = variableToPointerMap.size();
+				total = compose(total, compileAssignmentStatement(source));
+				int numberOfVariables = variableToPointerMap.size();
+				if (numberOfVariables > oldNumberOfVariables && neededFrameSize++ == Byte.MAX_VALUE)
+					throw new CompilationException("Cannot compile, there is a maximum number of " + Byte.MAX_VALUE + " variables per closure.");
+			}
+		}
+		
+		return compose(
+				new byte[] { InstructionSet.PUSH_FRAME, neededFrameSize },
+				total,
+				new byte[] { InstructionSet.POP_FRAME });
+	}
+	
 	/** Compile an if-statement into bytecode from its Brew source code.
 	 * if statements take the form :
 	 * if (condition)
@@ -39,7 +83,6 @@ public class Compiler {
 		// Remove the head of the if statement. We don't need it any more.
 		source = source.substring(2);
 		source = util.removeLeadingWhitespace(source);
-		System.out.println(source);
 		
 		// Define the end index of to be the first time we see a close-parenthesis.
 		int endIndex = 0;
@@ -140,8 +183,22 @@ public class Compiler {
 	 * @param source The source code to compile.
 	 * @return The compiled byte code to be put into the Brew Virtual Machine. */
 	public byte[] compileExpression(String source) {
+		// First, break apart the source into its pieces. This is called tokenization. 
 		String[] tokens = util.tokenize(source, true);
+		
+		// Next, for every token in the expression,
+		for (String token : tokens)
+			// If the token is a variable,
+			if (variableToPointerMap.containsKey(token)) {
+				// If the token is out of scope, throw a compilation error.
+				StackPointer p = variableToPointerMap.get(token);
+				if (p.frame() > frameID)
+					throw new CompilationException("Variable \"" + token + "\" is not visible from this scope.");
+			}
+		
+		// Next, convert to postfix notation. This is a necessary step to compile an expression.
 		String[] postfix = util.toPostfix(tokens);
+		// Finally, compile and return.
 		byte[] compiledCode = util.compileExpression(postfix, variableToPointerMap);
 		return compiledCode;
 	}

@@ -1,6 +1,5 @@
 package com.brew.compiler;
 
-import com.brew.vm.InstructionSet;
 import com.brew.vm.VirtualMachine;
 
 public class Test {
@@ -13,17 +12,16 @@ public class Test {
 		
 		
 		// TODO : This compiles? "byte x ="
+		// TODO : Add support for nested blocks
 		
-//		vm.interpreter().interpret(
-//				compiler.compose(
-//						new byte[] { InstructionSet.PUSH_FRAME, 2, },
-//						compiler.compileAssignmentStatement("byte x = 2"),
-//						compiler.compileAssignmentStatement("byte x = 2"),
-//						compiler.compileAssignmentStatement("byte poop = 1"),
-//						compiler.compileAssignmentStatement("poop = x*x"),
-//						new byte[] { InstructionSet.DEBUG_STACK }));
-		
-		
-		compiler.compileIfStatement("if (x > 3)", 16);
+		byte[] code = compiler.compile(
+						"byte x = 0",
+						"if (x == 0) {",
+						"	byte t = 50",
+						"	x = t",
+						"}",
+						"x = x + 1",
+						"DEBUG");
+		vm.interpreter().interpret(code);
 	}
 }
